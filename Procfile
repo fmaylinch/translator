@@ -1,0 +1,1 @@
+web: java -jar target/translator-1.0.jar
