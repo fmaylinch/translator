@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Translator</title>
+
+    <link rel="stylesheet" href="main.css">
+
+    <!--
+        This way of setting up React is not usual, but it's an easy way to start.
+        Usually you use the `create-react-app` tool.
+    -->
+
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- Add your components here -->
+    <script type="text/babel" src="/components/App.js"></script>
+
+</head>
+<body>
+
+<!-- React will insert (appendChild) the component you put below in ReactDOM.render -->
+<div id="root"></div>
+
+<script type="text/babel">
+
+    // Here we tell React to write the component App in the container with id "root".
+    ReactDOM.render(
+        <App/>,
+        document.getElementById('root')
+    );
+
+</script>
+<!--
+  Note: this page is a great way to try React but it's not suitable for production.
+  It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+  Read this section for a production-ready setup with JSX:
+  https://reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project
+
+  In a larger project, you can use an integrated toolchain that includes JSX instead:
+  https://reactjs.org/docs/create-a-new-react-app.html
+
+  You can also use React without JSX, in which case you can remove Babel:
+  https://reactjs.org/docs/react-without-jsx.html
+-->
+</body>
+</html>
