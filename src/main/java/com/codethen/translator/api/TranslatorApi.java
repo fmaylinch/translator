@@ -1,7 +1,11 @@
 package com.codethen.translator.api;
 
+import com.codethen.translator.api.model.TTSRequest;
+import com.codethen.translator.api.model.TTSResponse;
 import com.codethen.translator.api.model.TranslateRequest;
 import com.codethen.translator.api.model.TranslateResponse;
+import com.codethen.translator.readspeaker.ReadSpeakerService;
+import com.codethen.translator.readspeaker.model.ReadSpeakerResponse;
 import com.codethen.translator.yandex.YandexService;
 import com.codethen.translator.yandex.model.YandexResponse;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +24,7 @@ import java.io.IOException;
 public class TranslatorApi {
 
     private final YandexService yandex;
+    private final ReadSpeakerService readspeaker;
 
     public TranslatorApi() {
 
@@ -28,10 +33,16 @@ public class TranslatorApi {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(YandexService.class);
+
+        readspeaker = new Retrofit.Builder()
+                .baseUrl("https://demo.readspeaker.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(ReadSpeakerService.class);
     }
 
     @PostMapping("translate")
-    public TranslateResponse findGames(@RequestBody TranslateRequest translateReq) {
+    public TranslateResponse translate(@RequestBody TranslateRequest translateReq) {
 
         String lang = translateReq.from + "-" + translateReq.to;
 
@@ -53,6 +64,29 @@ public class TranslatorApi {
         } catch (IOException e) {
 
             return new TranslateResponse("Error translating: " + e.toString());
+        }
+    }
+
+    @PostMapping("text-to-speech")
+    public TTSResponse textToSpeech(@RequestBody TTSRequest ttsReq) {
+
+        final Call<ReadSpeakerResponse> yandexCall = readspeaker.tts(
+                "tts-software",
+                ttsReq.voice,
+                ttsReq.text,
+                "mp3"
+        );
+
+        try {
+            final Response<ReadSpeakerResponse> response = yandexCall.execute();
+
+            final ReadSpeakerResponse readSpeakerResp = response.body();
+
+            return new TTSResponse(readSpeakerResp.links.mp3);
+
+        } catch (IOException e) {
+
+            throw new RuntimeException("error converting audio", e);
         }
     }
 }

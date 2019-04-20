@@ -7,8 +7,11 @@ class App extends React.Component {
         this.state = {
             en: "",
             ru: "",
-            yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0"
+            yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
+            mp3ru: null,
         }
+
+        this.audioRef = React.createRef();
     }
 
     translate(from, to) {
@@ -24,10 +27,30 @@ class App extends React.Component {
             .then(response => {
 
                 const translation = response.data;
+                console.log("Translation response", translation);
 
                 const stateUpdate = {};
                 stateUpdate[to] = translation.text;
                 this.setState(stateUpdate);
+            });
+    }
+
+    loadRussianAudio() {
+
+        let ttsReq = {
+            text: this.state.ru,
+            voice: "Russian - female"
+        };
+
+        axios.post("/api/translator/text-to-speech", ttsReq)
+            .then(response => {
+
+                const ttsResp = response.data;
+                console.log("TTS response", ttsResp);
+
+                this.setState({mp3ru: ttsResp.mp3}, () => {
+                    this.audioRef.current.load();
+                });
             });
     }
 
@@ -52,7 +75,15 @@ class App extends React.Component {
                 </div>
                 <div>
                     <button onClick={() => this.translate("en", "ru")}>Translate en-ru</button>
+                </div>
+                <div>
                     <button onClick={() => this.translate("ru", "en")}>Translate ru-en</button>
+                    <button onClick={() => this.loadRussianAudio()}>Load audio</button>
+                </div>
+                <div>
+                    <audio controls ref={this.audioRef}>
+                        <source src={this.state.mp3ru} type="audio/mpeg" />
+                    </audio>
                 </div>
                 <div>
                     <textarea
