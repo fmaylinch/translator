@@ -7,6 +7,7 @@ class App extends React.Component {
         this.state = {
             en: "",
             ru: "",
+            autoCopyRussian: true,
             yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
             mp3ru: null,
         }
@@ -28,10 +29,11 @@ class App extends React.Component {
 
                 const translation = response.data;
                 console.log("Translation response", translation);
-
-                const stateUpdate = {};
-                stateUpdate[to] = translation.text;
-                this.setState(stateUpdate);
+                this.setState({[to]: translation.text}, () => {
+                    if (this.state.autoCopyRussian) {
+                        this.copyToClipboard(this.state.ru);
+                    }
+                });
             });
     }
 
@@ -54,11 +56,22 @@ class App extends React.Component {
             });
     }
 
-    handleChange(e, stateField) {
+    copyToClipboard(str) {
 
-        const stateUpdate = {};
-        stateUpdate[stateField] = e.target.value;
-        this.setState(stateUpdate);
+        // https://hackernoon.com/copying-text-to-clipboard-with-javascript-df4d4988697f
+        const el = document.createElement('textarea');
+        el.value = str;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    };
+
+    handleChange(e) {
+
+        const target = e.target;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        this.setState({[target.name]: value});
     }
 
     render() {
@@ -66,16 +79,14 @@ class App extends React.Component {
         return (
             <div className="siimple-content siimple-content--extra-large">
                 <div className="siimple-form">
-                    <div className="siimple-form-title">Translator</div>
-                    <div className="siimple-form-detail">
-                        Powered by <a href="https://translate.yandex.com/">Yandex</a> and <a href="https://www.readspeaker.com/">ReadSpeaker</a>
-                    </div>
                     <div className="siimple-form-field">
-                        <textarea type="text" className="siimple-textarea siimple-textarea--fluid"
-                               rows="4"
-                               placeholder="English text"
-                               value={this.state.en}
-                               onChange={(e) => this.handleChange(e, "en")}
+                        <textarea
+                            className="siimple-textarea siimple-textarea--fluid"
+                            rows="4"
+                            placeholder="English text"
+                            value={this.state.en}
+                            name="en"
+                            onChange={(e) => this.handleChange(e)}
                         />
                     </div>
                     <div className="siimple-form-field">
@@ -95,18 +106,39 @@ class App extends React.Component {
                         </audio>
                     </div>
                     <div className="siimple-form-field">
-                        <textarea type="text" className="siimple-textarea siimple-textarea--fluid"
-                               rows="4"
-                               placeholder="Russian text"
-                               value={this.state.ru}
-                               onChange={(e) => this.handleChange(e, "ru")}
+                        <textarea
+                            type="text"
+                            className="siimple-textarea siimple-textarea--fluid"
+                            rows="4"
+                            placeholder="Russian text"
+                            value={this.state.ru}
+                            name="ru"
+                            onChange={(e) => this.handleChange(e)}
                         />
                     </div>
                     <div className="siimple-form-field">
+                        <label className="siimple-label">Auto-copy Russian</label>
+                        <div className="siimple-checkbox">
+                            <input type="checkbox"
+                                   id="autoCopyRussian"
+                                   checked={this.state.autoCopyRussian}
+                                   name="autoCopyRussian"
+                                   onChange={(e) => this.handleChange(e)}
+                            />
+                            <label htmlFor="autoCopyRussian"></label>
+                        </div>
+                    </div>
+                    <div className="siimple-form-field">
                         <div className="siimple-form-field-label">Yandex ID</div>
-                        <input type="text" className="siimple-input siimple-input--fluid"
+                        <input type="text"
+                               className="siimple-input siimple-input--fluid"
                                value={this.state.yandexId}
-                               onChange={(e) => this.handleChange(e, "yandexId")} />
+                               name="yandexId"
+                               onChange={(e) => this.handleChange(e)} />
+                    </div>
+                    <div className="siimple-form-title">Translator</div>
+                    <div className="siimple-form-detail">
+                        Powered by <a href="https://translate.yandex.com/">Yandex</a> and <a href="https://www.readspeaker.com/">ReadSpeaker</a>
                     </div>
                 </div>
             </div>
