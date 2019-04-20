@@ -64,42 +64,50 @@ class App extends React.Component {
     render() {
 
         return (
-            <div>
-                <h1>Translator</h1>
-                <div>
-                    <textarea
-                        placeholder="Type in English here"
-                        value={this.state.en}
-                        onChange={(e) => this.handleChange(e, "en")}
-                    />
-                </div>
-                <div>
-                    <button onClick={() => this.translate("en", "ru")}>Translate en-ru</button>
-                </div>
-                <div>
-                    <button onClick={() => this.translate("ru", "en")}>Translate ru-en</button>
-                    <button onClick={() => this.loadRussianAudio()}>Load audio</button>
-                </div>
-                <div>
-                    <audio controls ref={this.audioRef}>
-                        <source src={this.state.mp3ru} type="audio/mpeg" />
-                    </audio>
-                </div>
-                <div>
-                    <textarea
-                        placeholder="Напиши по русски здесь"
-                        value={this.state.ru}
-                        onChange={(e) => this.handleChange(e, "ru")}
-                    />
-                </div>
-                <hr/>
-                <div>
-                    Yandex ID:
-                    <input
-                        size={50}
-                        value={this.state.yandexId}
-                        onChange={(e) => this.handleChange(e, "yandexId")}
-                    />
+            <div className="siimple-content siimple-content--extra-large">
+                <div className="siimple-form">
+                    <div className="siimple-form-title">Translator</div>
+                    <div className="siimple-form-detail">
+                        Powered by <a href="https://translate.yandex.com/">Yandex</a> and <a href="https://www.readspeaker.com/">ReadSpeaker</a>
+                    </div>
+                    <div className="siimple-form-field">
+                        <textarea type="text" className="siimple-textarea siimple-textarea--fluid"
+                               rows="4"
+                               placeholder="English text"
+                               value={this.state.en}
+                               onChange={(e) => this.handleChange(e, "en")}
+                        />
+                    </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-btn siimple-btn--primary"
+                             onClick={() => this.translate("en", "ru")}>EN to RU</div>
+                    </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-btn siimple-btn--primary"
+                             onClick={() => this.translate("ru", "en")}>RU to EN</div>
+                        &nbsp;
+                        <div className="siimple-btn siimple-btn--primary"
+                             onClick={() => this.loadRussianAudio()}>Load audio</div>
+                    </div>
+                    <div className="siimple-form-field">
+                        <audio controls ref={this.audioRef}>
+                            <source src={this.state.mp3ru} type="audio/mpeg" />
+                        </audio>
+                    </div>
+                    <div className="siimple-form-field">
+                        <textarea type="text" className="siimple-textarea siimple-textarea--fluid"
+                               rows="4"
+                               placeholder="Russian text"
+                               value={this.state.ru}
+                               onChange={(e) => this.handleChange(e, "ru")}
+                        />
+                    </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-form-field-label">Yandex ID</div>
+                        <input type="text" className="siimple-input siimple-input--fluid"
+                               value={this.state.yandexId}
+                               onChange={(e) => this.handleChange(e, "yandexId")} />
+                    </div>
                 </div>
             </div>
         );
