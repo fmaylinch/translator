@@ -7,12 +7,13 @@ class App extends React.Component {
         this.state = {
             en: "",
             ru: "",
-            autoCopyRussian: true,
+            autoCopyRussian: false,
             yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
             mp3ru: null,
         }
 
         this.audioRef = React.createRef();
+        this.russianRef = React.createRef();
     }
 
     translate(from, to) {
@@ -31,7 +32,7 @@ class App extends React.Component {
                 console.log("Translation response", translation);
                 this.setState({[to]: translation.text}, () => {
                     if (this.state.autoCopyRussian) {
-                        this.copyToClipboard(this.state.ru);
+                        App.copyToClipboard(this.state.ru);
                     }
                 });
             });
@@ -56,7 +57,14 @@ class App extends React.Component {
             });
     }
 
-    copyToClipboard(str) {
+    copyRussian() {
+
+        const el = this.russianRef.current;
+        el.select();
+        document.execCommand('copy');
+    }
+
+    static copyToClipboard(str) {
 
         // https://hackernoon.com/copying-text-to-clipboard-with-javascript-df4d4988697f
         const el = document.createElement('textarea');
@@ -97,13 +105,9 @@ class App extends React.Component {
                         <div className="siimple-btn siimple-btn--primary"
                              onClick={() => this.translate("ru", "en")}>RU to EN</div>
                         &nbsp;
-                        <div className="siimple-btn siimple-btn--primary"
-                             onClick={() => this.loadRussianAudio()}>Load audio</div>
-                    </div>
-                    <div className="siimple-form-field">
-                        <audio controls ref={this.audioRef}>
-                            <source src={this.state.mp3ru} type="audio/mpeg" />
-                        </audio>
+                        <div className="siimple-btn siimple-btn--success"
+                             onClick={() => this.copyRussian()}>Copy</div>
+
                     </div>
                     <div className="siimple-form-field">
                         <textarea
@@ -112,10 +116,22 @@ class App extends React.Component {
                             rows="4"
                             placeholder="Russian text"
                             value={this.state.ru}
+                            ref={this.russianRef}
                             name="ru"
                             onChange={(e) => this.handleChange(e)}
                         />
                     </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-btn siimple-btn--primary"
+                             onClick={() => this.loadRussianAudio()}>Load audio</div>
+                    </div>
+                    <div className="siimple-form-field">
+                        <audio controls ref={this.audioRef}>
+                            <source src={this.state.mp3ru} type="audio/mpeg" />
+                        </audio>
+                    </div>
+
+                    {/* This doesn't seem to work on mobile */}
                     <div className="siimple-form-field">
                         <label className="siimple-label">Auto-copy Russian</label>
                         <div className="siimple-checkbox">
@@ -128,6 +144,7 @@ class App extends React.Component {
                             <label htmlFor="autoCopyRussian"></label>
                         </div>
                     </div>
+
                     <div className="siimple-form-field">
                         <div className="siimple-form-field-label">Yandex ID</div>
                         <input type="text"
