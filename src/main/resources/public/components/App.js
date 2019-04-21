@@ -9,7 +9,8 @@ class App extends React.Component {
             ru: "",
             mp3ru: null,
             loading: false,
-            append: true
+            append: true,
+            yandexApiKey: localStorage.getItem("yandexApiKey") || ""
         };
 
         this.audioRef = React.createRef();
@@ -26,7 +27,8 @@ class App extends React.Component {
         let translateReq = {
             text: this.state[stateFrom],
             from: from,
-            to: to
+            to: to,
+            apiKey: this.state.yandexApiKey
         };
 
         this.setState({loading: true});
@@ -72,8 +74,10 @@ class App extends React.Component {
             });
     }
 
-    classForBtn(otherClasses) {
-        return "siimple-btn " + otherClasses + (this.state.loading ? " siimple-btn--disabled" : "");
+    classForBtn(otherClasses, stateField) {
+
+        const disabled = this.state.loading || this.state[stateField].trim().length === 0;
+        return "siimple-btn " + otherClasses + (disabled ? " siimple-btn--disabled" : "");
     }
 
     copyRussian() {
@@ -94,6 +98,11 @@ class App extends React.Component {
         const target = e.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
         this.setState({[target.name]: value});
+
+        if (target.dataset.stored) {
+            console.log("Storing in local storage", target.name, target.value)
+            localStorage.setItem(target.name, target.value);
+        }
     }
 
     clearValue(name) {
@@ -117,9 +126,9 @@ class App extends React.Component {
                             onChange={(e) => this.onInputChange(e)}
                         />
                         <div className="button-bar-bottom">
-                            <div className={this.classForBtn("siimple-btn--primary")}
+                            <div className={this.classForBtn("siimple-btn--primary", "other")}
                                  onClick={() => this.translate("en", "ru")}>en &gt; ru</div>
-                            <div className={this.classForBtn("siimple-btn--success")}
+                            <div className={this.classForBtn("siimple-btn--success", "other")}
                                  onClick={() => this.translate("es", "ru")}>es &gt; ru</div>
                             <div className="siimple-btn siimple-btn--error"
                                  onClick={() => this.clearValue("other")}>Clear</div>
@@ -128,9 +137,9 @@ class App extends React.Component {
 
                     <div className="siimple-form-field">
                         <div className="button-bar-top">
-                            <div className={this.classForBtn("siimple-btn--primary")}
+                            <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.translate("ru", "en")}>ru &gt; en</div>
-                            <div className={this.classForBtn("siimple-btn--success")}
+                            <div className={this.classForBtn("siimple-btn--success", "ru")}
                                  onClick={() => this.translate("ru", "es")}>ru &gt; es</div>
                             <div className="siimple-btn siimple-btn--error"
                                  onClick={() => this.clearValue("ru")}>Clear</div>
@@ -151,7 +160,7 @@ class App extends React.Component {
 
                     <div className="siimple-form-field">
                         <div className="button-bar-top">
-                            <div className={this.classForBtn("siimple-btn--primary")}
+                            <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.loadRussianAudio()}>Load audio</div>
                             <a href={this.state.mp3ru}>
                                 {this.state.mp3ru ? this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
@@ -180,6 +189,16 @@ class App extends React.Component {
                             />
                             <label htmlFor="appendText"></label>
                         </div>
+                    </div>
+
+                    <div className="siimple-form-field">
+                        <div className="siimple-form-field-label">Yandex API Key</div>
+                        <input type="text"
+                               className="siimple-input siimple-input--fluid"
+                               value={this.state.yandexApiKey}
+                               name="yandexApiKey"
+                               data-stored="true"
+                               onChange={(e) => this.onInputChange(e)} />
                     </div>
 
                 </div>

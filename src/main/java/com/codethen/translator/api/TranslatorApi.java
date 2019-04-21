@@ -48,18 +48,22 @@ public class TranslatorApi {
 
         final String lang = translateReq.from + "-" + translateReq.to;
 
-        final Call<YandexResponse> yandexCall = yandex.translate(yandexApiKey, translateReq.text, lang);
+        final Call<YandexResponse> yandexCall = yandex.translate(translateReq.apiKey, translateReq.text, lang);
 
         try {
             final Response<YandexResponse> response = yandexCall.execute();
 
             final YandexResponse yandexResp = response.body();
 
-            return new TranslateResponse(yandexResp.text.get(0));
+            if (response.code() == 200) {
+                return new TranslateResponse(yandexResp.text.get(0));
+            } else {
+                return new TranslateResponse("Error translating: " + response.errorBody().string());
+            }
 
         } catch (IOException e) {
 
-            return new TranslateResponse("Error translating: " + e.toString());
+            return new TranslateResponse("IO Error translating: " + e.toString());
         }
     }
 
