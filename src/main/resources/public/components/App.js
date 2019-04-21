@@ -60,13 +60,18 @@ class App extends React.Component {
     copyRussian() {
 
         const el = this.russianRef.current;
-        el.select();
-        document.execCommand('copy');
+
+        // https://stackoverflow.com/a/7436574/1121497
+        setTimeout(() => {
+            el.setSelectionRange(0, 9999);
+            document.execCommand('copy');
+        }, 0.5);
     }
 
     static copyToClipboard(str) {
 
         // https://hackernoon.com/copying-text-to-clipboard-with-javascript-df4d4988697f
+        // This doesn't seem to work on mobile
         const el = document.createElement('textarea');
         el.value = str;
         document.body.appendChild(el);
@@ -80,6 +85,11 @@ class App extends React.Component {
         const target = e.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
         this.setState({[target.name]: value});
+    }
+
+    clearValue(name) {
+
+        this.setState({[name]: ""});
     }
 
     render() {
@@ -100,18 +110,24 @@ class App extends React.Component {
                     <div className="siimple-form-field">
                         <div className="siimple-btn siimple-btn--primary"
                              onClick={() => this.translate("en", "ru")}>EN to RU</div>
+                        &nbsp;
+                        <div className="siimple-btn siimple-btn--error"
+                             onClick={() => this.clearValue("en")}>Clear</div>
                     </div>
                     <div className="siimple-form-field">
                         <div className="siimple-btn siimple-btn--primary"
                              onClick={() => this.translate("ru", "en")}>RU to EN</div>
                         &nbsp;
-                        <div className="siimple-btn siimple-btn--success"
+                        <div className="siimple-btn siimple-btn--error"
+                             onClick={() => this.clearValue("ru")}>Clear</div>
+                        &nbsp;
+                        <div className="siimple-btn siimple-btn--warning"
                              onClick={() => this.copyRussian()}>Copy</div>
 
                     </div>
                     <div className="siimple-form-field">
                         <textarea
-                            type="text"
+                            id="ru-text"
                             className="siimple-textarea siimple-textarea--fluid"
                             rows="4"
                             placeholder="Russian text"
@@ -130,8 +146,6 @@ class App extends React.Component {
                             <source src={this.state.mp3ru} type="audio/mpeg" />
                         </audio>
                     </div>
-
-                    {/* This doesn't seem to work on mobile */}
                     <div className="siimple-form-field">
                         <label className="siimple-label">Auto-copy Russian</label>
                         <div className="siimple-checkbox">
@@ -144,7 +158,6 @@ class App extends React.Component {
                             <label htmlFor="autoCopyRussian"></label>
                         </div>
                     </div>
-
                     <div className="siimple-form-field">
                         <div className="siimple-form-field-label">Yandex ID</div>
                         <input type="text"
