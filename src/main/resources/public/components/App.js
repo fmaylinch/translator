@@ -102,6 +102,7 @@ class App extends React.Component {
         return (
             <div className="siimple-content siimple-content--extra-large">
                 <div className="siimple-form">
+
                     <div className="siimple-form-field">
                         <textarea
                             className="siimple-textarea siimple-textarea--fluid"
@@ -115,26 +116,21 @@ class App extends React.Component {
                     <div className="siimple-form-field">
                         <div className={this.classForBtn("siimple-btn--primary")}
                              onClick={() => this.translate("en", "ru")}>en &gt; ru</div>
-                        &nbsp;
                         <div className={this.classForBtn("siimple-btn--success")}
                              onClick={() => this.translate("es", "ru")}>es &gt; ru</div>
-                        &nbsp;
                         <div className="siimple-btn siimple-btn--error"
                              onClick={() => this.clearValue("other")}>Clear</div>
                     </div>
+
                     <div className="siimple-form-field">
                         <div className={this.classForBtn("siimple-btn--primary")}
                              onClick={() => this.translate("ru", "en")}>ru &gt; en</div>
-                        &nbsp;
                         <div className={this.classForBtn("siimple-btn--success")}
                              onClick={() => this.translate("ru", "es")}>ru &gt; es</div>
-                        &nbsp;
                         <div className="siimple-btn siimple-btn--error"
                              onClick={() => this.clearValue("ru")}>Clear</div>
-                        &nbsp;
                         <div className="siimple-btn siimple-btn--warning"
                              onClick={() => this.copyRussian()}>Copy</div>
-
                     </div>
                     <div className="siimple-form-field">
                         <textarea
@@ -148,22 +144,22 @@ class App extends React.Component {
                             onChange={(e) => this.onInputChange(e)}
                         />
                     </div>
+
                     <div className="siimple-form-field">
                         <div className={this.classForBtn("siimple-btn--primary")}
                              onClick={() => this.loadRussianAudio()}>Load audio</div>
+                        <a href={this.state.mp3ru}>
+                            {this.state.mp3ru ? this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
+                        </a>
                     </div>
                     <div className="siimple-form-field">
                         <audio controls ref={this.audioRef}>
                             <source src={this.state.mp3ru} type="audio/mpeg" />
                         </audio>
-                        <div>
-                            <a href={this.state.mp3ru}>
-                                {this.state.mp3ru ? this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
-                            </a>
-                        </div>
                     </div>
+
                     <div className="siimple-form-field">
-                        <label className="siimple-label">Auto-copy Russian</label>
+                        <label className="siimple-label">Auto-copy Russian (may not work)</label>
                         <div className="siimple-checkbox">
                             <input type="checkbox"
                                    id="autoCopyRussian"
