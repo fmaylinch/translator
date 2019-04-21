@@ -7,7 +7,6 @@ class App extends React.Component {
         this.state = {
             other: "",
             ru: "",
-            autoCopyRussian: false,
             yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
             mp3ru: null,
             loading: false
@@ -38,12 +37,7 @@ class App extends React.Component {
 
                 const translation = response.data;
                 console.log("Translation response", translation);
-                this.setState({[stateTo]: translation.text, loading: false}, () => {
-
-                    if (this.state.autoCopyRussian) {
-                        this.copyRussian();
-                    }
-                });
+                this.setState({[stateTo]: translation.text, loading: false});
             });
     }
 
@@ -159,18 +153,6 @@ class App extends React.Component {
                     </div>
 
                     <div className="siimple-form-field">
-                        <label className="siimple-label">Auto-copy Russian (may not work)</label>
-                        <div className="siimple-checkbox">
-                            <input type="checkbox"
-                                   id="autoCopyRussian"
-                                   checked={this.state.autoCopyRussian}
-                                   name="autoCopyRussian"
-                                   onChange={(e) => this.onInputChange(e)}
-                            />
-                            <label htmlFor="autoCopyRussian"></label>
-                        </div>
-                    </div>
-                    <div className="siimple-form-field">
                         <div className="siimple-form-field-label">Yandex ID</div>
                         <input type="text"
                                className="siimple-input siimple-input--fluid"
@@ -178,6 +160,7 @@ class App extends React.Component {
                                name="yandexId"
                                onChange={(e) => this.onInputChange(e)} />
                     </div>
+
                     <div className="siimple-form-title">Translator</div>
                     <div className="siimple-form-detail">
                         Powered by <a href="https://translate.yandex.com/">Yandex</a> and <a href="https://www.readspeaker.com/">ReadSpeaker</a>
