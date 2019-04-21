@@ -39,12 +39,18 @@ class App extends React.Component {
                 const translation = response.data;
                 console.log("Translation response", translation);
 
-                const currentText = this.state.append ? this.state[stateTo] : "";
-                const separation = currentText.length > 0 ? " " : "";
-                const completeText = currentText + separation + translation.text;
+                let finalText = this.buildText(this.state[stateTo], translation.text);
 
-                this.setState({[stateTo]: completeText, loading: false});
+                this.setState({[stateTo]: finalText, loading: false});
             });
+    }
+
+    buildText(currentText, newText) {
+
+        if (!this.state.append) return newText;
+
+        const separation = currentText.length > 0 ? " " : "";
+        return currentText + separation + newText;
     }
 
     loadRussianAudio() {
