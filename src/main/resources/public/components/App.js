@@ -9,7 +9,8 @@ class App extends React.Component {
             ru: "",
             yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
             mp3ru: null,
-            loading: false
+            loading: false,
+            append: true
         };
 
         this.audioRef = React.createRef();
@@ -37,7 +38,12 @@ class App extends React.Component {
 
                 const translation = response.data;
                 console.log("Translation response", translation);
-                this.setState({[stateTo]: translation.text, loading: false});
+
+                const currentText = this.state.append ? this.state[stateTo] : "";
+                const separation = currentText.length > 0 ? " " : "";
+                const completeText = currentText + separation + translation.text;
+
+                this.setState({[stateTo]: completeText, loading: false});
             });
     }
 
@@ -158,6 +164,19 @@ class App extends React.Component {
                     </div>
 
                     <hr/>
+
+                    <div className="siimple-form-field">
+                        <label className="siimple-label">Append text</label>
+                        <div className="siimple-checkbox">
+                            <input type="checkbox"
+                                   id="appendText"
+                                   checked={this.state.append}
+                                   name="append"
+                                   onChange={(e) => this.onInputChange(e)}
+                            />
+                            <label htmlFor="appendText"></label>
+                        </div>
+                    </div>
 
                     <div className="siimple-form-field">
                         <div className="siimple-form-field-label">Yandex ID</div>
