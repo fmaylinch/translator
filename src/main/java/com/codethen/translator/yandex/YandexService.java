@@ -6,13 +6,9 @@ import retrofit2.http.*;
 
 public interface YandexService {
 
-  @POST("tr.json/translate")
-  @FormUrlEncoded
+  @GET("tr.json/translate")
   Call<YandexResponse> translate(
-          @Field("text") String text,
-          @Field("options") int options,
-          @Query("id") String id,
-          @Query("srv") String srv,
-          @Query("lang") String lang,
-          @Query("reason") String reason);
+          @Query("key") String key,
+          @Query("text") String text,
+          @Query("lang") String lang);
 }

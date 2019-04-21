@@ -23,13 +23,15 @@ import java.io.IOException;
 @RequestMapping(path = "/api/translator")
 public class TranslatorApi {
 
+    private static final String yandexApiKey = "trnsl.1.1.20190421T122207Z.d1622c95e8057226.ce69156f4828aad7dd2a354c97a553e4ba1eb7e4";
+
     private final YandexService yandex;
     private final ReadSpeakerService readspeaker;
 
     public TranslatorApi() {
 
         yandex = new Retrofit.Builder()
-                .baseUrl("https://translate.yandex.net/api/v1/")
+                .baseUrl("https://translate.yandex.net/api/v1.5/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(YandexService.class);
@@ -44,15 +46,9 @@ public class TranslatorApi {
     @PostMapping("translate")
     public TranslateResponse translate(@RequestBody TranslateRequest translateReq) {
 
-        String lang = translateReq.from + "-" + translateReq.to;
+        final String lang = translateReq.from + "-" + translateReq.to;
 
-        final Call<YandexResponse> yandexCall = yandex.translate(
-                translateReq.text,
-                4,
-                translateReq.id,
-                "tr-text",
-                lang,
-                "auto");
+        final Call<YandexResponse> yandexCall = yandex.translate(yandexApiKey, translateReq.text, lang);
 
         try {
             final Response<YandexResponse> response = yandexCall.execute();

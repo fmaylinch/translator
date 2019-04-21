@@ -7,7 +7,6 @@ class App extends React.Component {
         this.state = {
             other: "",
             ru: "",
-            yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
             mp3ru: null,
             loading: false,
             append: true
@@ -27,8 +26,7 @@ class App extends React.Component {
         let translateReq = {
             text: this.state[stateFrom],
             from: from,
-            to: to,
-            id: this.state.yandexId
+            to: to
         };
 
         this.setState({loading: true});
@@ -166,7 +164,7 @@ class App extends React.Component {
 
                     <div className="siimple-form-title">Translator</div>
                     <div className="siimple-form-detail">
-                        Powered by <a href="https://translate.yandex.com/">Yandex</a> and <a href="https://www.readspeaker.com/">ReadSpeaker</a>
+                        Powered by <a target="_blank" href="http://translate.yandex.com/">Yandex.Translate</a> and <a target="_blank" href="https://www.readspeaker.com/">ReadSpeaker</a>
                     </div>
 
                     <hr/>
@@ -182,15 +180,6 @@ class App extends React.Component {
                             />
                             <label htmlFor="appendText"></label>
                         </div>
-                    </div>
-
-                    <div className="siimple-form-field">
-                        <div className="siimple-form-field-label">Yandex ID</div>
-                        <input type="text"
-                               className="siimple-input siimple-input--fluid"
-                               value={this.state.yandexId}
-                               name="yandexId"
-                               onChange={(e) => this.onInputChange(e)} />
                     </div>
 
                 </div>
