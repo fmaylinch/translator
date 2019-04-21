@@ -66,6 +66,7 @@ class App extends React.Component {
 
         // https://stackoverflow.com/a/7436574/1121497
         setTimeout(() => {
+            el.select();
             el.setSelectionRange(0, 9999);
             document.execCommand('copy');
         }, 0.5);
@@ -154,6 +155,11 @@ class App extends React.Component {
                         <audio controls ref={this.audioRef}>
                             <source src={this.state.mp3ru} type="audio/mpeg" />
                         </audio>
+                        <div>
+                            <a href={this.state.mp3ru}>
+                                {this.state.mp3ru ? this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
+                            </a>
+                        </div>
                     </div>
                     <div className="siimple-form-field">
                         <label className="siimple-label">Auto-copy Russian</label>
