@@ -10,7 +10,8 @@ class App extends React.Component {
             autoCopyRussian: false,
             yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
             mp3ru: null,
-        }
+            loading: false
+        };
 
         this.audioRef = React.createRef();
         this.russianRef = React.createRef();
@@ -18,6 +19,8 @@ class App extends React.Component {
 
     translate(from, to) {
 
+        // This a bit of a hack
+        // All languages other than "ru" are written in "other"
         const stateFrom = from === "ru" ? "ru" : "other";
         const stateTo = to === "ru" ? "ru" : "other";
 
@@ -28,14 +31,17 @@ class App extends React.Component {
             id: this.state.yandexId
         };
 
+        this.setState({loading: true});
+
         axios.post("/api/translator/translate", translateReq)
             .then(response => {
 
                 const translation = response.data;
                 console.log("Translation response", translation);
-                this.setState({[stateTo]: translation.text}, () => {
+                this.setState({[stateTo]: translation.text, loading: false}, () => {
+
                     if (this.state.autoCopyRussian) {
-                        App.copyToClipboard(this.state.ru);
+                        this.copyRussian();
                     }
                 });
             });
@@ -48,16 +54,22 @@ class App extends React.Component {
             voice: "Russian - female"
         };
 
+        this.setState({loading: true});
+
         axios.post("/api/translator/text-to-speech", ttsReq)
             .then(response => {
 
                 const ttsResp = response.data;
                 console.log("TTS response", ttsResp);
 
-                this.setState({mp3ru: ttsResp.mp3}, () => {
+                this.setState({mp3ru: ttsResp.mp3, loading: false}, () => {
                     this.audioRef.current.load();
                 });
             });
+    }
+
+    classForBtn(otherClasses) {
+        return "siimple-btn " + otherClasses + (this.state.loading ? " siimple-btn--disabled" : "");
     }
 
     copyRussian() {
@@ -72,19 +84,8 @@ class App extends React.Component {
         }, 0.5);
     }
 
-    static copyToClipboard(str) {
-
-        // https://hackernoon.com/copying-text-to-clipboard-with-javascript-df4d4988697f
-        // This doesn't seem to work on mobile
-        const el = document.createElement('textarea');
-        el.value = str;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-    };
-
-    handleChange(e) {
+    /** Updates state.NAME field with value of input, where NAME is taken from the input name attribute */
+    onInputChange(e) {
 
         const target = e.target;
         const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -108,24 +109,24 @@ class App extends React.Component {
                             placeholder="English / Spanish"
                             value={this.state.other}
                             name="other"
-                            onChange={(e) => this.handleChange(e)}
+                            onChange={(e) => this.onInputChange(e)}
                         />
                     </div>
                     <div className="siimple-form-field">
-                        <div className="siimple-btn siimple-btn--primary"
+                        <div className={this.classForBtn("siimple-btn--primary")}
                              onClick={() => this.translate("en", "ru")}>en &gt; ru</div>
                         &nbsp;
-                        <div className="siimple-btn siimple-btn--success"
+                        <div className={this.classForBtn("siimple-btn--success")}
                              onClick={() => this.translate("es", "ru")}>es &gt; ru</div>
                         &nbsp;
                         <div className="siimple-btn siimple-btn--error"
                              onClick={() => this.clearValue("other")}>Clear</div>
                     </div>
                     <div className="siimple-form-field">
-                        <div className="siimple-btn siimple-btn--primary"
+                        <div className={this.classForBtn("siimple-btn--primary")}
                              onClick={() => this.translate("ru", "en")}>ru &gt; en</div>
                         &nbsp;
-                        <div className="siimple-btn siimple-btn--success"
+                        <div className={this.classForBtn("siimple-btn--success")}
                              onClick={() => this.translate("ru", "es")}>ru &gt; es</div>
                         &nbsp;
                         <div className="siimple-btn siimple-btn--error"
@@ -144,11 +145,11 @@ class App extends React.Component {
                             value={this.state.ru}
                             ref={this.russianRef}
                             name="ru"
-                            onChange={(e) => this.handleChange(e)}
+                            onChange={(e) => this.onInputChange(e)}
                         />
                     </div>
                     <div className="siimple-form-field">
-                        <div className="siimple-btn siimple-btn--primary"
+                        <div className={this.classForBtn("siimple-btn--primary")}
                              onClick={() => this.loadRussianAudio()}>Load audio</div>
                     </div>
                     <div className="siimple-form-field">
@@ -168,7 +169,7 @@ class App extends React.Component {
                                    id="autoCopyRussian"
                                    checked={this.state.autoCopyRussian}
                                    name="autoCopyRussian"
-                                   onChange={(e) => this.handleChange(e)}
+                                   onChange={(e) => this.onInputChange(e)}
                             />
                             <label htmlFor="autoCopyRussian"></label>
                         </div>
@@ -179,7 +180,7 @@ class App extends React.Component {
                                className="siimple-input siimple-input--fluid"
                                value={this.state.yandexId}
                                name="yandexId"
-                               onChange={(e) => this.handleChange(e)} />
+                               onChange={(e) => this.onInputChange(e)} />
                     </div>
                     <div className="siimple-form-title">Translator</div>
                     <div className="siimple-form-detail">
