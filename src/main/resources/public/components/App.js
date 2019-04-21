@@ -5,7 +5,7 @@ class App extends React.Component {
         super(props);
 
         this.state = {
-            en: "",
+            other: "",
             ru: "",
             autoCopyRussian: false,
             yandexId: "26e324a6.5cbb1afa.3ee63c8f-0-0",
@@ -18,8 +18,11 @@ class App extends React.Component {
 
     translate(from, to) {
 
+        const stateFrom = from === "ru" ? "ru" : "other";
+        const stateTo = to === "ru" ? "ru" : "other";
+
         let translateReq = {
-            text: this.state[from],
+            text: this.state[stateFrom],
             from: from,
             to: to,
             id: this.state.yandexId
@@ -30,7 +33,7 @@ class App extends React.Component {
 
                 const translation = response.data;
                 console.log("Translation response", translation);
-                this.setState({[to]: translation.text}, () => {
+                this.setState({[stateTo]: translation.text}, () => {
                     if (this.state.autoCopyRussian) {
                         App.copyToClipboard(this.state.ru);
                     }
@@ -101,22 +104,28 @@ class App extends React.Component {
                         <textarea
                             className="siimple-textarea siimple-textarea--fluid"
                             rows="4"
-                            placeholder="English text"
-                            value={this.state.en}
-                            name="en"
+                            placeholder="English / Spanish"
+                            value={this.state.other}
+                            name="other"
                             onChange={(e) => this.handleChange(e)}
                         />
                     </div>
                     <div className="siimple-form-field">
                         <div className="siimple-btn siimple-btn--primary"
-                             onClick={() => this.translate("en", "ru")}>EN to RU</div>
+                             onClick={() => this.translate("en", "ru")}>en &gt; ru</div>
+                        &nbsp;
+                        <div className="siimple-btn siimple-btn--success"
+                             onClick={() => this.translate("es", "ru")}>es &gt; ru</div>
                         &nbsp;
                         <div className="siimple-btn siimple-btn--error"
-                             onClick={() => this.clearValue("en")}>Clear</div>
+                             onClick={() => this.clearValue("other")}>Clear</div>
                     </div>
                     <div className="siimple-form-field">
                         <div className="siimple-btn siimple-btn--primary"
-                             onClick={() => this.translate("ru", "en")}>RU to EN</div>
+                             onClick={() => this.translate("ru", "en")}>ru &gt; en</div>
+                        &nbsp;
+                        <div className="siimple-btn siimple-btn--success"
+                             onClick={() => this.translate("ru", "es")}>ru &gt; es</div>
                         &nbsp;
                         <div className="siimple-btn siimple-btn--error"
                              onClick={() => this.clearValue("ru")}>Clear</div>
@@ -130,7 +139,7 @@ class App extends React.Component {
                             id="ru-text"
                             className="siimple-textarea siimple-textarea--fluid"
                             rows="4"
-                            placeholder="Russian text"
+                            placeholder="Russian"
                             value={this.state.ru}
                             ref={this.russianRef}
                             name="ru"
