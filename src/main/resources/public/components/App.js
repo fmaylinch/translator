@@ -100,18 +100,6 @@ class App extends React.Component {
         }, 0.5);
     }
 
-    pasteClipboard(stateField) {
-
-        navigator.clipboard.readText()
-            .then(text => {
-                console.log('Pasted content: ', text);
-                this.setState({[stateField]: text});
-            })
-            .catch(err => {
-                console.error('Failed to read clipboard contents: ', err);
-            });
-    }
-
     /** Updates state.NAME field with value of input, where NAME is taken from the input name attribute */
     onInputChange(e) {
 
@@ -168,8 +156,6 @@ class App extends React.Component {
                                  onClick={() => this.clearValue("ru")}>Clear</div>
                             <div className="siimple-btn siimple-btn--warning"
                                  onClick={() => this.copyToClipboard(this.russianRef)}>Copy</div>
-                            <div className="siimple-btn siimple-btn--warning"
-                                 onClick={() => this.pasteClipboard("ru")}>Paste</div>
                         </div>
                         <div className="spinner-container">
                             <textarea
