@@ -13,3 +13,12 @@
 .button-bar-top {
     margin-bottom: 5px;
 }
+
+.spinner-container {
+    position: relative;
+}
+.siimple-spinner {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+}

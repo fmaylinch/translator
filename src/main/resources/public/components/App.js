@@ -8,7 +8,7 @@ class App extends React.Component {
             other: "",
             ru: "",
             mp3ru: null,
-            loading: false,
+            loading: null,
             append: true,
             yandexApiKey: localStorage.getItem("yandexApiKey") || ""
         };
@@ -31,7 +31,7 @@ class App extends React.Component {
             apiKey: this.state.yandexApiKey
         };
 
-        this.setState({loading: true});
+        this.setState({loading: stateTo});
 
         axios.post("/api/translator/translate", translateReq)
             .then(response => {
@@ -39,10 +39,16 @@ class App extends React.Component {
                 const translation = response.data;
                 console.log("Translation response", translation);
 
-                let finalText = this.buildText(this.state[stateTo], translation.text);
-
-                this.setState({[stateTo]: finalText, loading: false});
+                this.changeText(stateTo, translation.text);
+                this.setState({loading: null});
             });
+    }
+
+    /** Changes stateField, by either replacing or appending the text */
+    changeText(stateField, text) {
+
+        let finalText = this.buildText(this.state[stateField], text);
+        this.setState({[stateField]: finalText});
     }
 
     buildText(currentText, newText) {
@@ -53,6 +59,7 @@ class App extends React.Component {
         return currentText + separation + newText;
     }
 
+    /** Loads current russian text as audio using TTS service */
     loadRussianAudio() {
 
         let ttsReq = {
@@ -60,7 +67,7 @@ class App extends React.Component {
             voice: "Russian - female"
         };
 
-        this.setState({loading: true});
+        this.setState({loading: "mp3ru"});
 
         axios.post("/api/translator/text-to-speech", ttsReq)
             .then(response => {
@@ -68,21 +75,22 @@ class App extends React.Component {
                 const ttsResp = response.data;
                 console.log("TTS response", ttsResp);
 
-                this.setState({mp3ru: ttsResp.mp3, loading: false}, () => {
+                this.setState({mp3ru: ttsResp.mp3, loading: null}, () => {
                     this.audioRef.current.load();
                 });
             });
     }
 
+    /** Includes disabled class if this.state.loading */
     classForBtn(otherClasses, stateField) {
 
         const disabled = this.state.loading || this.state[stateField].trim().length === 0;
         return "siimple-btn " + otherClasses + (disabled ? " siimple-btn--disabled" : "");
     }
 
-    copyRussian() {
+    copyToClipboard(ref) {
 
-        const el = this.russianRef.current;
+        const el = ref.current;
 
         // https://stackoverflow.com/a/7436574/1121497
         setTimeout(() => {
@@ -90,6 +98,18 @@ class App extends React.Component {
             el.setSelectionRange(0, 9999);
             document.execCommand('copy');
         }, 0.5);
+    }
+
+    pasteClipboard(stateField) {
+
+        navigator.clipboard.readText()
+            .then(text => {
+                console.log('Pasted content: ', text);
+                this.setState({[stateField]: text});
+            })
+            .catch(err => {
+                console.error('Failed to read clipboard contents: ', err);
+            });
     }
 
     /** Updates state.NAME field with value of input, where NAME is taken from the input name attribute */
@@ -117,14 +137,17 @@ class App extends React.Component {
                 <div className="siimple-form">
 
                     <div className="siimple-form-field">
-                        <textarea
-                            className="siimple-textarea siimple-textarea--fluid"
-                            rows="4"
-                            placeholder="English / Spanish"
-                            value={this.state.other}
-                            name="other"
-                            onChange={(e) => this.onInputChange(e)}
-                        />
+                        <div className="spinner-container">
+                            <textarea
+                                className="siimple-textarea siimple-textarea--fluid"
+                                rows="4"
+                                placeholder="English / Spanish"
+                                value={this.state.other}
+                                name="other"
+                                onChange={(e) => this.onInputChange(e)}
+                            />
+                            {this.displaySpinnerWhenLoading("other")}
+                        </div>
                         <div className="button-bar-bottom">
                             <div className={this.classForBtn("siimple-btn--primary", "other")}
                                  onClick={() => this.translate("en", "ru")}>en &gt; ru</div>
@@ -144,31 +167,40 @@ class App extends React.Component {
                             <div className="siimple-btn siimple-btn--error"
                                  onClick={() => this.clearValue("ru")}>Clear</div>
                             <div className="siimple-btn siimple-btn--warning"
-                                 onClick={() => this.copyRussian()}>Copy</div>
+                                 onClick={() => this.copyToClipboard(this.russianRef)}>Copy</div>
+                            <div className="siimple-btn siimple-btn--warning"
+                                 onClick={() => this.pasteClipboard("ru")}>Paste</div>
                         </div>
-                        <textarea
-                            id="ru-text"
-                            className="siimple-textarea siimple-textarea--fluid"
-                            rows="4"
-                            placeholder="Russian"
-                            value={this.state.ru}
-                            ref={this.russianRef}
-                            name="ru"
-                            onChange={(e) => this.onInputChange(e)}
-                        />
+                        <div className="spinner-container">
+                            <textarea
+                                id="ru-text"
+                                className="siimple-textarea siimple-textarea--fluid"
+                                rows="4"
+                                placeholder="Russian"
+                                value={this.state.ru}
+                                ref={this.russianRef}
+                                name="ru"
+                                onChange={(e) => this.onInputChange(e)}
+                            />
+                            {this.displaySpinnerWhenLoading("ru")}
+                        </div>
                     </div>
 
                     <div className="siimple-form-field">
-                        <div className="button-bar-top">
+                        <div className="spinner-container button-bar-top">
                             <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.loadRussianAudio()}>Load audio</div>
                             <a href={this.state.mp3ru}>
-                                {this.state.mp3ru ? this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
+                                {this.state.mp3ru && this.state.loading !== "mp3ru" ?
+                                    this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
                             </a>
+                            {this.displaySpinnerWhenLoading("mp3ru")}
                         </div>
-                        <audio controls ref={this.audioRef}>
-                            <source src={this.state.mp3ru} type="audio/mpeg" />
-                        </audio>
+                        <div>
+                            <audio controls ref={this.audioRef}>
+                                <source src={this.state.mp3ru} type="audio/mpeg" />
+                            </audio>
+                        </div>
                     </div>
 
                     <div className="siimple-form-title">Translator</div>
@@ -204,5 +236,11 @@ class App extends React.Component {
                 </div>
             </div>
         );
+    }
+
+    displaySpinnerWhenLoading(name) {
+        return this.state.loading === name ?
+            <div className="siimple-spinner siimple-spinner--primary" />
+            : null;
     }
 }
