@@ -4,4 +4,5 @@ public class SynthesizeVoice {
 
     public String languageCode;
     public String ssmlGender;
+    public String name;
 }

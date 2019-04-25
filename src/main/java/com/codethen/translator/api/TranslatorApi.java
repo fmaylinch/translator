@@ -114,7 +114,8 @@ public class TranslatorApi {
 
         request.audioConfig.audioEncoding = "MP3";
         request.input.text = ttsReq.text;
-        request.voice.languageCode = ttsReq.voice;
+        request.voice.languageCode = ttsReq.lang;
+        request.voice.name = ttsReq.voice;
 
         final Call<SynthesizeResponse> call = google.synthesize(
                 ttsReq.apiKey,

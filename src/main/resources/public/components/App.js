@@ -73,7 +73,8 @@ class App extends React.Component {
         let ttsReqGoogle = {
             service: "google",
             text: this.state.ru,
-            voice: "ru",
+            lang: "ru",
+            voice: "ru-Ru-Wavenet-C",
             apiKey: this.state.googleApiKey
         };
 
