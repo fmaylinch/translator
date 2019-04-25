@@ -4,6 +4,9 @@ import com.codethen.translator.api.model.TTSRequest;
 import com.codethen.translator.api.model.TTSResponse;
 import com.codethen.translator.api.model.TranslateRequest;
 import com.codethen.translator.api.model.TranslateResponse;
+import com.codethen.translator.google.GoogleService;
+import com.codethen.translator.google.model.SynthesizeRequest;
+import com.codethen.translator.google.model.SynthesizeResponse;
 import com.codethen.translator.readspeaker.ReadSpeakerService;
 import com.codethen.translator.readspeaker.model.ReadSpeakerResponse;
 import com.codethen.translator.yandex.YandexService;
@@ -23,10 +26,9 @@ import java.io.IOException;
 @RequestMapping(path = "/api/translator")
 public class TranslatorApi {
 
-    private static final String yandexApiKey = "trnsl.1.1.20190421T122207Z.d1622c95e8057226.ce69156f4828aad7dd2a354c97a553e4ba1eb7e4";
-
     private final YandexService yandex;
     private final ReadSpeakerService readspeaker;
+    private final GoogleService google;
 
     public TranslatorApi() {
 
@@ -41,6 +43,12 @@ public class TranslatorApi {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(ReadSpeakerService.class);
+
+        google = new Retrofit.Builder()
+                .baseUrl("https://texttospeech.googleapis.com/v1/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(GoogleService.class);
     }
 
     @PostMapping("translate")
@@ -70,23 +78,52 @@ public class TranslatorApi {
     @PostMapping("text-to-speech")
     public TTSResponse textToSpeech(@RequestBody TTSRequest ttsReq) {
 
-        final Call<ReadSpeakerResponse> yandexCall = readspeaker.tts(
+        try {
+
+            if ("readSpeaker".equals(ttsReq.service)) {
+                return readSpeaker(ttsReq);
+            } else if ("google".equals(ttsReq.service)) {
+                return googleSynthesize(ttsReq);
+            } else {
+                throw new RuntimeException("Unknown service: " + ttsReq.service);
+            }
+
+        } catch (IOException e) {
+
+            throw new RuntimeException("error converting audio", e);
+        }
+    }
+
+    private TTSResponse readSpeaker(@RequestBody TTSRequest ttsReq) throws IOException {
+
+        final Call<ReadSpeakerResponse> call = readspeaker.tts(
                 "tts-software",
                 ttsReq.voice,
                 ttsReq.text,
                 "mp3"
         );
 
-        try {
-            final Response<ReadSpeakerResponse> response = yandexCall.execute();
+        final ReadSpeakerResponse response = call.execute().body();
 
-            final ReadSpeakerResponse readSpeakerResp = response.body();
+        return new TTSResponse(response.links.mp3);
+    }
 
-            return new TTSResponse(readSpeakerResp.links.mp3);
+    private TTSResponse googleSynthesize(TTSRequest ttsReq) throws IOException {
 
-        } catch (IOException e) {
+        final SynthesizeRequest request = new SynthesizeRequest();
 
-            throw new RuntimeException("error converting audio", e);
-        }
+        request.audioConfig.audioEncoding = "MP3";
+        request.input.text = ttsReq.text;
+        request.voice.languageCode = ttsReq.voice;
+
+        final Call<SynthesizeResponse> call = google.synthesize(
+                ttsReq.apiKey,
+                request
+        );
+
+        final SynthesizeResponse response = call.execute().body();
+
+        return new TTSResponse("data:audio/mp3;base64,"
+                + response.audioContent);
     }
 }

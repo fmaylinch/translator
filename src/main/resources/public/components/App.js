@@ -10,7 +10,9 @@ class App extends React.Component {
             mp3ru: null,
             loading: null,
             append: true,
-            yandexApiKey: localStorage.getItem("yandexApiKey") || ""
+            useGoogleTTS: true,
+            yandexApiKey: localStorage.getItem("yandexApiKey") || "",
+            googleApiKey: localStorage.getItem("googleApiKey") || ""
         };
 
         this.audioRef = React.createRef();
@@ -62,10 +64,20 @@ class App extends React.Component {
     /** Loads current russian text as audio using TTS service */
     loadRussianAudio() {
 
-        let ttsReq = {
+        let ttsReqReadSpeaker = {
+            service: "readSpeaker",
             text: this.state.ru,
             voice: "Russian - female"
         };
+
+        let ttsReqGoogle = {
+            service: "google",
+            text: this.state.ru,
+            voice: "ru",
+            apiKey: this.state.googleApiKey
+        };
+
+        const ttsReq = this.state.useGoogleTTS ? ttsReqGoogle : ttsReqReadSpeaker;
 
         this.setState({loading: "mp3ru"});
 
@@ -177,7 +189,7 @@ class App extends React.Component {
                             <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.loadRussianAudio()}>Load audio</div>
                             <a href={this.state.mp3ru}>
-                                {this.state.mp3ru && this.state.loading !== "mp3ru" ?
+                                {this.state.mp3ru && this.state.loading !== "mp3ru" && this.state.mp3ru.startsWith("https") ?
                                     this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
                             </a>
                             {this.displaySpinnerWhenLoading("mp3ru")}
@@ -191,7 +203,10 @@ class App extends React.Component {
 
                     <div className="siimple-form-title">Translator</div>
                     <div className="siimple-form-detail">
-                        Powered by <a target="_blank" href="http://translate.yandex.com/">Yandex.Translate</a> and <a target="_blank" href="https://www.readspeaker.com/">ReadSpeaker</a>
+                        Powered by <span/>
+                        <a target="_blank" href="http://translate.yandex.com/">Yandex</a>, <span/>
+                        <a href="https://cloud.google.com/text-to-speech/">Google</a>, <span/>
+                        <a target="_blank" href="https://www.readspeaker.com/">ReadSpeaker</a>
                     </div>
 
                     <hr/>
@@ -205,7 +220,20 @@ class App extends React.Component {
                                    name="append"
                                    onChange={(e) => this.onInputChange(e)}
                             />
-                            <label htmlFor="appendText"></label>
+                            <label htmlFor="appendText"/>
+                        </div>
+                    </div>
+
+                    <div className="siimple-form-field">
+                        <label className="siimple-label">Use Google TTS (disable for ReadSpeaker)</label>
+                        <div className="siimple-checkbox">
+                            <input type="checkbox"
+                                   id="useGoogleTTS"
+                                   checked={this.state.useGoogleTTS}
+                                   name="useGoogleTTS"
+                                   onChange={(e) => this.onInputChange(e)}
+                            />
+                            <label htmlFor="useGoogleTTS"/>
                         </div>
                     </div>
 
@@ -215,6 +243,15 @@ class App extends React.Component {
                                className="siimple-input siimple-input--fluid"
                                value={this.state.yandexApiKey}
                                name="yandexApiKey"
+                               data-stored="true"
+                               onChange={(e) => this.onInputChange(e)} />
+                    </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-form-field-label">Google API Key</div>
+                        <input type="text"
+                               className="siimple-input siimple-input--fluid"
+                               value={this.state.googleApiKey}
+                               name="googleApiKey"
                                data-stored="true"
                                onChange={(e) => this.onInputChange(e)} />
                     </div>
