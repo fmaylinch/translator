@@ -25,7 +25,6 @@ import com.codethen.translator.yandex.model.YandexResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,10 +35,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 
 @RestController
 @RequestMapping(path = "/api/translator")
@@ -153,9 +150,13 @@ public class TranslatorApi {
 
         final SynthesizeResponse response = call.execute().body();
 
-        String audioContentBase64 = response.audioContent;
+        final String audioContentBase64 = response.audioContent;
 
-        return getTtsResponseBase64(audioContentBase64);
+        // return getTtsResponseForBase64(audioContentBase64);
+
+        final byte[] bytes = Base64.decodeBase64(audioContentBase64);
+        final File file = fileStorageService.storeBytesAsFile(bytes);
+        return getTtsResponseForFile(file);
     }
 
     private TTSResponse awsPollySynthesize(TTSRequest ttsReq) {
@@ -173,13 +174,17 @@ public class TranslatorApi {
 
         //final byte[] bytes = IOUtils.toByteArray(audioStream);
         //final String audioBase64 = Base64.encodeBase64String(bytes);
-        //return getTtsResponseBase64(audioBase64);
+        //return getTtsResponseForBase64(audioBase64);
 
         final File file = fileStorageService.storeInputStreamAsFile(audioStream);
+        return getTtsResponseForFile(file);
+    }
+
+    private TTSResponse getTtsResponseForFile(File file) {
         return new TTSResponse("/api/files/" + file.getName());
     }
 
-    private TTSResponse getTtsResponseBase64(String audioContentBase64) {
+    private TTSResponse getTtsResponseForBase64(String audioContentBase64) {
         return new TTSResponse("data:audio/mp3;base64," + audioContentBase64);
     }
 

@@ -5,10 +5,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,5 +50,10 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new FileStorageException("Can't create file", e);
         }
+    }
+
+    public File storeBytesAsFile(byte[] bytes) {
+
+        return storeInputStreamAsFile(new ByteArrayInputStream(bytes));
     }
 }
