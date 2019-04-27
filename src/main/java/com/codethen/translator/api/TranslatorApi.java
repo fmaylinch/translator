@@ -19,10 +19,13 @@ import com.codethen.translator.google.model.SynthesizeRequest;
 import com.codethen.translator.google.model.SynthesizeResponse;
 import com.codethen.translator.readspeaker.ReadSpeakerService;
 import com.codethen.translator.readspeaker.model.ReadSpeakerResponse;
+import com.codethen.translator.storage.FileStorageService;
 import com.codethen.translator.yandex.YandexService;
 import com.codethen.translator.yandex.model.YandexResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +35,11 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 @RestController
 @RequestMapping(path = "/api/translator")
@@ -46,7 +52,12 @@ public class TranslatorApi {
     private AmazonPolly lastPolly;
     private AWSCredentials lastAwsCredentials;
 
-    public TranslatorApi() {
+    private final FileStorageService fileStorageService;
+
+    @Autowired
+    public TranslatorApi(FileStorageService fileStorageService) {
+
+        this.fileStorageService = fileStorageService;
 
         yandex = new Retrofit.Builder()
                 .baseUrl("https://translate.yandex.net/api/v1.5/")
@@ -142,7 +153,9 @@ public class TranslatorApi {
 
         final SynthesizeResponse response = call.execute().body();
 
-        return new TTSResponse("data:audio/mp3;base64," + response.audioContent);
+        String audioContentBase64 = response.audioContent;
+
+        return getTtsResponseBase64(audioContentBase64);
     }
 
     private TTSResponse awsPollySynthesize(TTSRequest ttsReq) {
@@ -158,15 +171,16 @@ public class TranslatorApi {
 
         final InputStream audioStream = synthRes.getAudioStream();
 
-        try {
-            final byte[] bytes = IOUtils.toByteArray(audioStream);
-            final String audioBase64 = Base64.encodeBase64String(bytes);
+        //final byte[] bytes = IOUtils.toByteArray(audioStream);
+        //final String audioBase64 = Base64.encodeBase64String(bytes);
+        //return getTtsResponseBase64(audioBase64);
 
-            return new TTSResponse("data:audio/mp3;base64," + audioBase64);
+        final File file = fileStorageService.storeInputStreamAsFile(audioStream);
+        return new TTSResponse("/api/files/" + file.getName());
+    }
 
-        } catch (IOException e) {
-            throw new RuntimeException("Error while encoding audio", e);
-        }
+    private TTSResponse getTtsResponseBase64(String audioContentBase64) {
+        return new TTSResponse("data:audio/mp3;base64," + audioContentBase64);
     }
 
     private AmazonPolly getAmazonPolly(TTSRequest ttsReq) {

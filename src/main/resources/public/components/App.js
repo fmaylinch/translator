@@ -215,8 +215,9 @@ class App extends React.Component {
                             <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.loadRussianAudio()}>Load audio</div>
                             <a href={this.state.mp3ru}>
-                                {this.state.mp3ru && this.state.loading !== "mp3ru" && this.state.mp3ru.startsWith("https") ?
-                                    this.state.mp3ru.replace("https://media.readspeaker.com/cache/", "") : ""}
+                                {this.state.mp3ru && this.state.loading !== "mp3ru" && !this.state.mp3ru.startsWith("data:") ?
+                                    this.state.mp3ru.replace(/.+\//, "") : "" // just leave filename for link text
+                                }
                             </a>
                             {this.displaySpinnerWhenLoading("mp3ru")}
                         </div>
