@@ -1,5 +1,15 @@
 package com.codethen.translator.api;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.polly.AmazonPolly;
+import com.amazonaws.services.polly.AmazonPollyClientBuilder;
+import com.amazonaws.services.polly.model.OutputFormat;
+import com.amazonaws.services.polly.model.SynthesizeSpeechRequest;
+import com.amazonaws.services.polly.model.SynthesizeSpeechResult;
 import com.codethen.translator.api.model.TTSRequest;
 import com.codethen.translator.api.model.TTSResponse;
 import com.codethen.translator.api.model.TranslateRequest;
@@ -11,6 +21,8 @@ import com.codethen.translator.readspeaker.ReadSpeakerService;
 import com.codethen.translator.readspeaker.model.ReadSpeakerResponse;
 import com.codethen.translator.yandex.YandexService;
 import com.codethen.translator.yandex.model.YandexResponse;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +33,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @RestController
 @RequestMapping(path = "/api/translator")
@@ -29,6 +42,9 @@ public class TranslatorApi {
     private final YandexService yandex;
     private final ReadSpeakerService readspeaker;
     private final GoogleService google;
+
+    private AmazonPolly lastPolly;
+    private AWSCredentials lastAwsCredentials;
 
     public TranslatorApi() {
 
@@ -84,6 +100,8 @@ public class TranslatorApi {
                 return readSpeaker(ttsReq);
             } else if ("google".equals(ttsReq.service)) {
                 return googleSynthesize(ttsReq);
+            } else if ("awsPolly".equals(ttsReq.service)) {
+                return awsPollySynthesize(ttsReq);
             } else {
                 throw new RuntimeException("Unknown service: " + ttsReq.service);
             }
@@ -124,7 +142,58 @@ public class TranslatorApi {
 
         final SynthesizeResponse response = call.execute().body();
 
-        return new TTSResponse("data:audio/mp3;base64,"
-                + response.audioContent);
+        return new TTSResponse("data:audio/mp3;base64," + response.audioContent);
+    }
+
+    private TTSResponse awsPollySynthesize(TTSRequest ttsReq) {
+
+        final AmazonPolly polly = getAmazonPolly(ttsReq);
+
+        final SynthesizeSpeechRequest synthReq = new SynthesizeSpeechRequest()
+                .withText(ttsReq.text)
+                .withVoiceId(ttsReq.voice)
+                .withOutputFormat(OutputFormat.Mp3);
+
+        final SynthesizeSpeechResult synthRes = polly.synthesizeSpeech(synthReq);
+
+        final InputStream audioStream = synthRes.getAudioStream();
+
+        try {
+            final byte[] bytes = IOUtils.toByteArray(audioStream);
+            final String audioBase64 = Base64.encodeBase64String(bytes);
+
+            return new TTSResponse("data:audio/mp3;base64," + audioBase64);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error while encoding audio", e);
+        }
+    }
+
+    private AmazonPolly getAmazonPolly(TTSRequest ttsReq) {
+
+        final String[] keyAndSecret = ttsReq.apiKey.split(" ");
+
+        final AWSCredentials awsCredentials = new BasicAWSCredentials(keyAndSecret[0], keyAndSecret[1]);
+
+        if (awsCredentials.getAWSAccessKeyId().length() != 20 || awsCredentials.getAWSSecretKey().length() != 40) {
+            throw new IllegalArgumentException("Api key probably wrong: " + ttsReq.apiKey);
+        }
+
+        if (lastAwsCredentials != null
+                && lastAwsCredentials.getAWSAccessKeyId().equals(awsCredentials.getAWSAccessKeyId())
+                && lastAwsCredentials.getAWSSecretKey().equals(awsCredentials.getAWSSecretKey())) {
+
+            return lastPolly;
+        }
+
+        lastPolly = AmazonPollyClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                .withClientConfiguration(new ClientConfiguration())
+                .withRegion(Regions.EU_WEST_1)
+                .build();
+
+        lastAwsCredentials = awsCredentials;
+
+        return lastPolly;
     }
 }

@@ -10,9 +10,10 @@ class App extends React.Component {
             mp3ru: null,
             loading: null,
             append: true,
-            useGoogleTTS: true,
+            ttsEngine: localStorage.getItem("ttsEngine") || "readSpeaker",
             yandexApiKey: localStorage.getItem("yandexApiKey") || "",
-            googleApiKey: localStorage.getItem("googleApiKey") || ""
+            googleApiKey: localStorage.getItem("googleApiKey") || "",
+            awsApiKey: localStorage.getItem("awsApiKey") || ""
         };
 
         this.audioRef = React.createRef();
@@ -42,6 +43,10 @@ class App extends React.Component {
                 console.log("Translation response", translation);
 
                 this.changeText(stateTo, translation.text);
+
+            }).catch(error => {
+                this.changeText(stateTo, error);
+            }).finally(() => {
                 this.setState({loading: null});
             });
     }
@@ -64,21 +69,7 @@ class App extends React.Component {
     /** Loads current russian text as audio using TTS service */
     loadRussianAudio() {
 
-        let ttsReqReadSpeaker = {
-            service: "readSpeaker",
-            text: this.state.ru,
-            voice: "Russian - female"
-        };
-
-        let ttsReqGoogle = {
-            service: "google",
-            text: this.state.ru,
-            lang: "ru",
-            voice: "ru-Ru-Wavenet-C",
-            apiKey: this.state.googleApiKey
-        };
-
-        const ttsReq = this.state.useGoogleTTS ? ttsReqGoogle : ttsReqReadSpeaker;
+        const ttsReq = this.buildTextToSpeechRequest();
 
         this.setState({loading: "mp3ru"});
 
@@ -91,7 +82,41 @@ class App extends React.Component {
                 this.setState({mp3ru: ttsResp.mp3, loading: null}, () => {
                     this.audioRef.current.load();
                 });
+
+            }).catch(error => {
+                this.changeText("other", error); // TODO: Where to put this message?
+            }).finally(() => {
+                this.setState({loading: null});
             });
+    }
+
+    buildTextToSpeechRequest() {
+
+        let ttsReqs = {
+
+            readSpeaker: {
+                service: "readSpeaker",
+                text: this.state.ru,
+                voice: "Russian - female"
+            },
+
+            google: {
+                service: "google",
+                text: this.state.ru,
+                lang: "ru",
+                voice: "ru-Ru-Wavenet-C",
+                apiKey: this.state.googleApiKey
+            },
+
+            awsPolly: {
+                service: "awsPolly",
+                text: this.state.ru,
+                voice: "Tatyana",
+                apiKey: this.state.awsApiKey
+            }
+        };
+
+        return ttsReqs[this.state.ttsEngine];
     }
 
     /** Includes disabled class if this.state.loading */
@@ -226,16 +251,16 @@ class App extends React.Component {
                     </div>
 
                     <div className="siimple-form-field">
-                        <label className="siimple-label">Use Google TTS (disable for ReadSpeaker)</label>
-                        <div className="siimple-checkbox">
-                            <input type="checkbox"
-                                   id="useGoogleTTS"
-                                   checked={this.state.useGoogleTTS}
-                                   name="useGoogleTTS"
-                                   onChange={(e) => this.onInputChange(e)}
-                            />
-                            <label htmlFor="useGoogleTTS"/>
-                        </div>
+                        <label className="siimple-label">TTS engine: </label>
+                        <select className="siimple-select"
+                                value={this.state.ttsEngine}
+                                name="ttsEngine"
+                                data-stored="true"
+                                onChange={(e) => this.onInputChange(e)}>
+                            <option value="readSpeaker">ReadSpeaker</option>
+                            <option value="google">Google</option>
+                            <option value="awsPolly">AWS Polly</option>
+                        </select>
                     </div>
 
                     <div className="siimple-form-field">
@@ -253,6 +278,15 @@ class App extends React.Component {
                                className="siimple-input siimple-input--fluid"
                                value={this.state.googleApiKey}
                                name="googleApiKey"
+                               data-stored="true"
+                               onChange={(e) => this.onInputChange(e)} />
+                    </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-form-field-label">AWS API Key</div>
+                        <input type="text"
+                               className="siimple-input siimple-input--fluid"
+                               value={this.state.awsApiKey}
+                               name="awsApiKey"
                                data-stored="true"
                                onChange={(e) => this.onInputChange(e)} />
                     </div>
