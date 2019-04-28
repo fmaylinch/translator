@@ -229,7 +229,7 @@ class App extends React.Component {
                                     {fileInfo.mp3.startsWith("data:") ?
                                         <span>{fileInfo.ttsEngine} - {fileInfo.text}</span>
                                         :
-                                        <span><a href={fileInfo.mp3}>{fileInfo.ttsEngine} - {fileInfo.text}</a></span>
+                                        <span><a target="_blank" href={fileInfo.mp3}>{fileInfo.ttsEngine} - {fileInfo.text}</a></span>
                                     }
                                 </div>
                                 <div>
@@ -246,7 +246,7 @@ class App extends React.Component {
                     <div className="siimple-form-detail">
                         Powered by <span/>
                         <a target="_blank" href="http://translate.yandex.com/">Yandex</a>, <span/>
-                        <a href="https://cloud.google.com/text-to-speech/">Google</a>, <span/>
+                        <a target="_blank" href="https://cloud.google.com/text-to-speech/">Google</a>, <span/>
                         <a target="_blank" href="https://www.readspeaker.com/">ReadSpeaker</a>
                     </div>
 
