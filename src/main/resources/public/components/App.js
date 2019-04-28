@@ -7,7 +7,7 @@ class App extends React.Component {
         this.state = {
             other: "",
             ru: "",
-            mp3ru: null,
+            fileInfos: [],
             loading: null,
             append: true,
             ttsEngine: localStorage.getItem("ttsEngine") || "readSpeaker",
@@ -71,7 +71,7 @@ class App extends React.Component {
 
         const ttsReq = this.buildTextToSpeechRequest();
 
-        this.setState({loading: "mp3ru"});
+        this.setState({loading: "audio"});
 
         axios.post("/api/translator/text-to-speech", ttsReq)
             .then(response => {
@@ -79,9 +79,16 @@ class App extends React.Component {
                 const ttsResp = response.data;
                 console.log("TTS response", ttsResp);
 
-                this.setState({mp3ru: ttsResp.mp3, loading: null}, () => {
-                    this.audioRef.current.load();
-                });
+                const fileInfo = {
+                    ttsEngine: this.state.ttsEngine,
+                    text: ttsReq.text,
+                    mp3: ttsResp.mp3
+                };
+
+                this.setState(
+                    state => ({fileInfos: [...state.fileInfos, fileInfo], loading: null}),
+                    () => this.audioRef.current.load()
+                );
 
             }).catch(error => {
                 this.changeText("other", error); // TODO: Where to put this message?
@@ -214,18 +221,25 @@ class App extends React.Component {
                         <div className="spinner-container button-bar-top">
                             <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.loadRussianAudio()}>Load audio</div>
-                            <a href={this.state.mp3ru}>
-                                {this.state.mp3ru && this.state.loading !== "mp3ru" && !this.state.mp3ru.startsWith("data:") ?
-                                    this.state.mp3ru.replace(/.+\//, "") : "" // just leave filename for link text
-                                }
-                            </a>
-                            {this.displaySpinnerWhenLoading("mp3ru")}
+                            {this.displaySpinnerWhenLoading("audio")}
                         </div>
-                        <div>
-                            <audio controls ref={this.audioRef}>
-                                <source src={this.state.mp3ru} type="audio/mpeg" />
-                            </audio>
-                        </div>
+                        {this.state.fileInfos.map(fileInfo => (
+                            <div>
+                                <div>
+                                    {fileInfo.mp3.startsWith("data:") ?
+                                        <span>{fileInfo.ttsEngine} - {fileInfo.text.substring(0, 20)}</span>
+                                        :
+                                        <a href={fileInfo.mp3}>{fileInfo.ttsEngine} - {fileInfo.text.substring(0, 20)}</a>
+                                    }
+                                </div>
+                                <div>
+                                    <audio controls ref={this.audioRef}>
+                                        <source src={fileInfo.mp3} type="audio/mpeg" />
+                                    </audio>
+                                </div>
+                            </div>
+
+                        ))}
                     </div>
 
                     <div className="siimple-form-title">Translator</div>
