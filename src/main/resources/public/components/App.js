@@ -215,21 +215,21 @@ class App extends React.Component {
                             />
                             {this.displaySpinnerWhenLoading("ru")}
                         </div>
-                    </div>
-
-                    <div className="siimple-form-field">
-                        <div className="spinner-container button-bar-top">
+                        <div className="spinner-container button-bar-bottom">
                             <div className={this.classForBtn("siimple-btn--primary", "ru")}
                                  onClick={() => this.loadRussianAudio()}>Load audio</div>
                             {this.displaySpinnerWhenLoading("audio")}
                         </div>
+                    </div>
+
+                    <div className="siimple-form-field">
                         {this.state.fileInfos.map(fileInfo => (
                             <div>
-                                <div>
+                                <div className="text-info">
                                     {fileInfo.mp3.startsWith("data:") ?
-                                        <span>{fileInfo.ttsEngine} - {fileInfo.text.substring(0, 20)}</span>
+                                        <span>{fileInfo.ttsEngine} - {fileInfo.text}</span>
                                         :
-                                        <a href={fileInfo.mp3}>{fileInfo.ttsEngine} - {fileInfo.text.substring(0, 20)}</a>
+                                        <span><a href={fileInfo.mp3}>{fileInfo.ttsEngine} - {fileInfo.text}</a></span>
                                     }
                                 </div>
                                 <div>

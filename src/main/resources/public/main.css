@@ -1,3 +1,4 @@
+/* 16px minimum to avoid mobile browser auto-zoom */
 .siimple-textarea, .siimple-input, .siimple-select {
     font-size: 16px;
 }
@@ -14,6 +15,7 @@
     margin-bottom: 5px;
 }
 
+/* Center spinner */
 .spinner-container {
     position: relative;
 }
@@ -21,4 +23,12 @@
     position: absolute;
     bottom: 50%;
     left: 50%;
+}
+
+/* Truncate link text with ellipsis */
+.text-info {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 5px;
 }
