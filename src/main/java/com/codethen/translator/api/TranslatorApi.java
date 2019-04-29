@@ -14,7 +14,10 @@ import com.codethen.translator.api.model.TTSRequest;
 import com.codethen.translator.api.model.TTSResponse;
 import com.codethen.translator.api.model.TranslateRequest;
 import com.codethen.translator.api.model.TranslateResponse;
-import com.codethen.translator.google.GoogleService;
+import com.codethen.translator.google.GoogleTranslationService;
+import com.codethen.translator.google.GoogleTtsService;
+import com.codethen.translator.google.model.GoogleTranslateRequest;
+import com.codethen.translator.google.model.GoogleTranslateResponse;
 import com.codethen.translator.google.model.SynthesizeRequest;
 import com.codethen.translator.google.model.SynthesizeResponse;
 import com.codethen.translator.readspeaker.ReadSpeakerService;
@@ -23,7 +26,6 @@ import com.codethen.translator.storage.FileStorageService;
 import com.codethen.translator.yandex.YandexService;
 import com.codethen.translator.yandex.model.YandexResponse;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,6 +39,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 
 @RestController
 @RequestMapping(path = "/api/translator")
@@ -44,7 +47,8 @@ public class TranslatorApi {
 
     private final YandexService yandex;
     private final ReadSpeakerService readspeaker;
-    private final GoogleService google;
+    private final GoogleTtsService googleTts;
+    private final GoogleTranslationService googleTranslation;
 
     private AmazonPolly lastPolly;
     private AWSCredentials lastAwsCredentials;
@@ -68,35 +72,64 @@ public class TranslatorApi {
                 .build()
                 .create(ReadSpeakerService.class);
 
-        google = new Retrofit.Builder()
+        googleTts = new Retrofit.Builder()
                 .baseUrl("https://texttospeech.googleapis.com/v1/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
-                .create(GoogleService.class);
+                .create(GoogleTtsService.class);
+
+        googleTranslation = new Retrofit.Builder()
+                .baseUrl("https://translation.googleapis.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(GoogleTranslationService.class);
     }
 
     @PostMapping("translate")
     public TranslateResponse translate(@RequestBody TranslateRequest translateReq) {
 
-        final String lang = translateReq.from + "-" + translateReq.to;
-
-        final Call<YandexResponse> yandexCall = yandex.translate(translateReq.apiKey, translateReq.text, lang);
-
         try {
-            final Response<YandexResponse> response = yandexCall.execute();
-
-            final YandexResponse yandexResp = response.body();
-
-            if (response.code() == 200) {
-                return new TranslateResponse(yandexResp.text.get(0));
+            if ("yandex".equals(translateReq.service)) {
+                return translateWithYandex(translateReq);
+            } else if ("google".equals(translateReq.service)) {
+                return translateWithGoogle(translateReq);
             } else {
-                return new TranslateResponse("Error translating: " + response.errorBody().string());
+                throw new RuntimeException("Unknown service: " + translateReq.service);
             }
 
         } catch (IOException e) {
 
             return new TranslateResponse("IO Error translating: " + e.toString());
         }
+    }
+
+    private TranslateResponse translateWithYandex(@RequestBody TranslateRequest translateReq) throws IOException {
+
+        final String lang = translateReq.from + "-" + translateReq.to;
+
+        final Call<YandexResponse> call = yandex.translate(translateReq.apiKey, translateReq.text, lang);
+
+        final Response<YandexResponse> response = call.execute();
+
+        if (response.code() == 200) {
+            return new TranslateResponse(response.body().text.get(0));
+        } else {
+            return new TranslateResponse("Error translating: " + response.errorBody().string());
+        }
+    }
+
+    private TranslateResponse translateWithGoogle(@RequestBody TranslateRequest translateReq) throws IOException {
+
+        final GoogleTranslateRequest googleTranslateRequest = new GoogleTranslateRequest();
+        googleTranslateRequest.source = translateReq.from;
+        googleTranslateRequest.target = translateReq.to;
+        googleTranslateRequest.q = Collections.singletonList(translateReq.text);
+
+        final Call<GoogleTranslateResponse> call = googleTranslation.translate(translateReq.apiKey, googleTranslateRequest);
+
+        final GoogleTranslateResponse response = call.execute().body();
+
+        return new TranslateResponse(response.data.translations.get(0).translatedText);
     }
 
     @PostMapping("text-to-speech")
@@ -143,7 +176,7 @@ public class TranslatorApi {
         request.voice.languageCode = ttsReq.lang;
         request.voice.name = ttsReq.voice;
 
-        final Call<SynthesizeResponse> call = google.synthesize(
+        final Call<SynthesizeResponse> call = googleTts.synthesize(
                 ttsReq.apiKey,
                 request
         );

@@ -10,6 +10,7 @@ class App extends React.Component {
             fileInfos: [],
             loading: null,
             append: true,
+            translationEngine: localStorage.getItem("translationEngine") || "yandex",
             ttsEngine: localStorage.getItem("ttsEngine") || "readSpeaker",
             yandexApiKey: localStorage.getItem("yandexApiKey") || "",
             googleApiKey: localStorage.getItem("googleApiKey") || "",
@@ -27,11 +28,15 @@ class App extends React.Component {
         const stateFrom = from === "ru" ? "ru" : "other";
         const stateTo = to === "ru" ? "ru" : "other";
 
+        const apiKey = this.state.translationEngine === "google" ?
+            this.state.googleApiKey : this.state.yandexApiKey;
+
         let translateReq = {
             text: this.state[stateFrom],
             from: from,
             to: to,
-            apiKey: this.state.yandexApiKey
+            service: this.state.translationEngine,
+            apiKey: apiKey
         };
 
         this.setState({loading: stateTo});
@@ -263,6 +268,18 @@ class App extends React.Component {
                             />
                             <label htmlFor="appendText"/>
                         </div>
+                    </div>
+
+                    <div className="siimple-form-field">
+                        <label className="siimple-label">Translation engine: </label>
+                        <select className="siimple-select"
+                                value={this.state.translationEngine}
+                                name="translationEngine"
+                                data-stored="true"
+                                onChange={(e) => this.onInputChange(e)}>
+                            <option value="yandex">Yandex</option>
+                            <option value="google">Google</option>
+                        </select>
                     </div>
 
                     <div className="siimple-form-field">

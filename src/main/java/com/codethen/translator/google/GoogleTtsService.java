@@ -7,7 +7,7 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-public interface GoogleService {
+public interface GoogleTtsService {
 
     // About the dot prefix:
     // https://github.com/square/retrofit/issues/2730#issuecomment-380428575
