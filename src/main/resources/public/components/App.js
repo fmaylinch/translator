@@ -28,11 +28,15 @@ class App extends React.Component {
         const stateFrom = from === "ru" ? "ru" : "other";
         const stateTo = to === "ru" ? "ru" : "other";
 
+        const text = this.state[stateFrom];
+
+        if (!text) return;
+
         const apiKey = this.state.translationEngine === "google" ?
             this.state.googleApiKey : this.state.yandexApiKey;
 
         let translateReq = {
-            text: this.state[stateFrom],
+            text: text,
             from: from,
             to: to,
             service: this.state.translationEngine,
@@ -75,6 +79,8 @@ class App extends React.Component {
     loadRussianAudio() {
 
         const ttsReq = this.buildTextToSpeechRequest();
+
+        if (!ttsReq.text.length) return;
 
         this.setState({loading: "audio"});
 
