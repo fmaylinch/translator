@@ -91,6 +91,7 @@ class App extends React.Component {
                 console.log("TTS response", ttsResp);
 
                 const fileInfo = {
+                    index: this.state.fileInfos.length,
                     ttsEngine: this.state.ttsEngine,
                     text: ttsReq.text,
                     mp3: ttsResp.mp3
@@ -235,7 +236,7 @@ class App extends React.Component {
 
                     <div className="siimple-form-field">
                         {this.state.fileInfos.map(fileInfo => (
-                            <div>
+                            <div key={fileInfo.index}>
                                 <div className="text-info">
                                     {fileInfo.mp3.startsWith("data:") ?
                                         <span>{fileInfo.ttsEngine} - {fileInfo.text}</span>
