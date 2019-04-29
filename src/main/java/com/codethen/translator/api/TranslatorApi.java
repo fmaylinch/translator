@@ -39,7 +39,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
+import java.util.Arrays;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/api/translator")
@@ -120,16 +123,25 @@ public class TranslatorApi {
 
     private TranslateResponse translateWithGoogle(@RequestBody TranslateRequest translateReq) throws IOException {
 
+        // Split lines, because google will strip new-line chars, so later we can recover them
+        final List<String> texts = Arrays.asList(translateReq.text.split("\n"));
+
         final GoogleTranslateRequest googleTranslateRequest = new GoogleTranslateRequest();
         googleTranslateRequest.source = translateReq.from;
         googleTranslateRequest.target = translateReq.to;
-        googleTranslateRequest.q = Collections.singletonList(translateReq.text);
+        googleTranslateRequest.q = texts;
 
         final Call<GoogleTranslateResponse> call = googleTranslation.translate(translateReq.apiKey, googleTranslateRequest);
 
         final GoogleTranslateResponse response = call.execute().body();
 
-        return new TranslateResponse(response.data.translations.get(0).translatedText);
+        // Recover new-line chars
+        final String text = response.data.translations
+                .stream()
+                .map(t -> t.translatedText)
+                .collect(Collectors.joining("\n"));
+
+        return new TranslateResponse(text);
     }
 
     @PostMapping("text-to-speech")
