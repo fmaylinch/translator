@@ -39,8 +39,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Arrays;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
 public class TranslatorApi {
 
     private final YandexService yandex;
-    private final ReadSpeakerService readspeaker;
+    private final ReadSpeakerService readSpeakerDemo;
     private final GoogleTtsService googleTts;
     private final GoogleTranslationService googleTranslation;
 
@@ -69,7 +70,7 @@ public class TranslatorApi {
                 .build()
                 .create(YandexService.class);
 
-        readspeaker = new Retrofit.Builder()
+        readSpeakerDemo = new Retrofit.Builder()
                 .baseUrl("https://demo.readspeaker.com/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
@@ -151,6 +152,8 @@ public class TranslatorApi {
 
             if ("readSpeaker".equals(ttsReq.service)) {
                 return readSpeaker(ttsReq);
+            } else if ("readSpeakerPaid".equals(ttsReq.service)) {
+                return readSpeakerPaid(ttsReq);
             } else if ("google".equals(ttsReq.service)) {
                 return googleSynthesize(ttsReq);
             } else if ("awsPolly".equals(ttsReq.service)) {
@@ -165,9 +168,9 @@ public class TranslatorApi {
         }
     }
 
-    private TTSResponse readSpeaker(@RequestBody TTSRequest ttsReq) throws IOException {
+    private TTSResponse readSpeaker(TTSRequest ttsReq) throws IOException {
 
-        final Call<ReadSpeakerResponse> call = readspeaker.tts(
+        final Call<ReadSpeakerResponse> call = readSpeakerDemo.tts(
                 "tts-software",
                 ttsReq.voice,
                 ttsReq.text,
@@ -177,6 +180,28 @@ public class TranslatorApi {
         final ReadSpeakerResponse response = call.execute().body();
 
         return new TTSResponse(response.links.mp3);
+    }
+
+    private TTSResponse readSpeakerPaid(TTSRequest ttsReq) throws IOException {
+
+        String url = "https://tts.readspeaker.com/a/speak?" +
+                "key=" + ttsReq.apiKey +
+                "&lang=" + ttsReq.lang + // e.g. ru_ru
+                "&voice=" + ttsReq.voice + // e.g. Vera
+                "&text=" + URLEncoder.encode(ttsReq.text, "UTF-8") +
+                "&audioformat=mp3" +
+                "&streaming=0";
+
+        try {
+
+            final InputStream input = new URL(url).openStream();
+            final File file = fileStorageService.storeInputStreamAsMp3File(input);
+            return getTtsResponseForFile(file);
+
+        } catch (IOException e) {
+
+            throw new RuntimeException("Error reading audio from ReadSpeaker", e);
+        }
     }
 
     private TTSResponse googleSynthesize(TTSRequest ttsReq) throws IOException {
@@ -217,11 +242,7 @@ public class TranslatorApi {
 
         final InputStream audioStream = synthRes.getAudioStream();
 
-        //final byte[] bytes = IOUtils.toByteArray(audioStream);
-        //final String audioBase64 = Base64.encodeBase64String(bytes);
-        //return getTtsResponseForBase64(audioBase64);
-
-        final File file = fileStorageService.storeInputStreamAsFile(audioStream);
+        final File file = fileStorageService.storeInputStreamAsMp3File(audioStream);
         return getTtsResponseForFile(file);
     }
 

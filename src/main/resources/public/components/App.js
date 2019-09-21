@@ -14,6 +14,7 @@ class App extends React.Component {
             ttsEngine: localStorage.getItem("ttsEngine") || "readSpeaker",
             yandexApiKey: localStorage.getItem("yandexApiKey") || "",
             googleApiKey: localStorage.getItem("googleApiKey") || "",
+            readSpeakerApiKey: localStorage.getItem("readSpeakerApiKey") || "",
             awsApiKey: localStorage.getItem("awsApiKey") || ""
         };
 
@@ -117,6 +118,14 @@ class App extends React.Component {
                 service: "readSpeaker",
                 text: this.state.ru,
                 voice: "Russian - female"
+            },
+
+            readSpeakerPaid: {
+                service: "readSpeakerPaid",
+                text: this.state.ru,
+                lang: "ru_ru",
+                voice: "Vera",
+                apiKey: this.state.readSpeakerApiKey
             },
 
             google: {
@@ -259,7 +268,8 @@ class App extends React.Component {
                         Powered by <span/>
                         <a target="_blank" href="http://translate.yandex.com/">Yandex</a>, <span/>
                         <a target="_blank" href="https://cloud.google.com/text-to-speech/">Google</a>, <span/>
-                        <a target="_blank" href="https://www.readspeaker.com/">ReadSpeaker</a>
+                        <a target="_blank" href="https://www.readspeaker.com/">ReadSpeaker</a> <span/>,
+                        <a target="_blank" href="https://aws.amazon.com/polly/">AWS Polly</a>
                     </div>
 
                     <hr/>
@@ -296,7 +306,8 @@ class App extends React.Component {
                                 name="ttsEngine"
                                 data-stored="true"
                                 onChange={(e) => this.onInputChange(e)}>
-                            <option value="readSpeaker">ReadSpeaker</option>
+                            <option value="readSpeaker">ReadSpeaker (demo)</option>
+                            <option value="readSpeakerPaid">ReadSpeaker (paid)</option>
                             <option value="google">Google</option>
                             <option value="awsPolly">AWS Polly</option>
                         </select>
@@ -308,6 +319,15 @@ class App extends React.Component {
                                className="siimple-input siimple-input--fluid"
                                value={this.state.yandexApiKey}
                                name="yandexApiKey"
+                               data-stored="true"
+                               onChange={(e) => this.onInputChange(e)} />
+                    </div>
+                    <div className="siimple-form-field">
+                        <div className="siimple-form-field-label">ReadSpeaker API Key</div>
+                        <input type="text"
+                               className="siimple-input siimple-input--fluid"
+                               value={this.state.readSpeakerApiKey}
+                               name="readSpeakerApiKey"
                                data-stored="true"
                                onChange={(e) => this.onInputChange(e)} />
                     </div>

@@ -39,7 +39,7 @@ public class FileStorageService {
         }
     }
 
-    public File storeInputStreamAsFile(InputStream inputStream) {
+    public File storeInputStreamAsMp3File(InputStream inputStream) {
 
         try {
             final File file = File.createTempFile("tts-", ".mp3");
@@ -54,6 +54,6 @@ public class FileStorageService {
 
     public File storeBytesAsFile(byte[] bytes) {
 
-        return storeInputStreamAsFile(new ByteArrayInputStream(bytes));
+        return storeInputStreamAsMp3File(new ByteArrayInputStream(bytes));
     }
 }
